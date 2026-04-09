@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Spoti-Ignore",
+  "version": "1.2.0",
+  "description": "One-click button to tell Spotify to stop recommending a song. Uses Spotify's own ignore API.",
+  "icons": {
+    "16":  "icons/icon16.png",
+    "32":  "icons/icon32.png",
+    "48":  "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [],
+  "host_permissions": [
+    "https://open.spotify.com/*",
+    "https://spclient.wg.spotify.com/*",
+    "https://clienttoken.spotify.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://open.spotify.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    }
+  ]
+}
