@@ -21,8 +21,8 @@ No third-party servers. No account required beyond your normal Spotify login. Ju
 - **Keyboard shortcut** — Press **Shift + X** to ignore the current track without touching the mouse.
 - **Live status detection** — The button shows a loading state while tokens are being captured and turns green once everything is ready.
 - **Duplicate-ignore protection** — If a track is already in your ignore list the button updates automatically to reflect that.
-- **Guided onboarding** — On first use a modal walks you through finding your User ID; if you navigate to your profile page the ID is captured automatically from the URL.
-- **Change account** — A small ⚙ link below the Ignore button lets you update or reset your stored User ID at any time.
+- **Guided onboarding** — On first use a modal walks you through finding your user ID; if you navigate to your profile page the ID is captured automatically from the URL.
+- **Change user ID** — If you have multiple Spotify accounts or need to update your user ID for any reason, you can change it from the extension popup by clicking "Change user ID" or clear it entirely with the "Clear" button.
 
 ---
 
@@ -58,19 +58,19 @@ The Spoti-Ignore icon will appear in your browser toolbar.
 
 Go to [open.spotify.com](https://open.spotify.com) and start playing a song. A green **Ignore** button will appear in the bottom-right corner of the page after a few seconds once the extension has captured the required tokens.
 
-### 6. Set up your Spotify User ID (first time only)
+### 6. Set up your Spotify user ID (first time only)
 
 A setup modal will appear automatically when the extension loads for the first time. You have two options:
 
-**Option A — automatic (recommended):** Click **"Open my Spotify profile page"** in the modal. Once the page loads the extension detects your User ID from the URL and fills it in for you.
+**Option A — automatic (recommended):** Click **"Open my Spotify profile page"** in the modal. Once the page loads the extension detects your user ID from the URL and fills it in for you.
 
-**Option B — manual:** Your User ID appears in the URL when you visit your profile (`open.spotify.com/user/YOUR_ID`). Paste it into the input field and click **Save & continue**.
+**Option B — manual:** Your user ID appears in the URL when you visit your profile (`open.spotify.com/user/YOUR_ID`). Paste it into the input field and click **Save & continue**.
 
 Your ID is stored in `localStorage` in your browser and never asked for again.
 
-### Changing your User ID later
+### Changing your user ID later
 
-Click the small **⚙ Change account** link that appears below the Ignore button at any time.
+Click the extension icon in the toolbar and then click on either "clear" or "change user ID" to reset it. You can then repeat the setup process to enter a new ID.
 
 ---
 
@@ -103,8 +103,8 @@ Then reload the extension in `chrome://extensions` and refresh the Spotify tab. 
 - [ ] **Auto-skip** — Automatically skip to the next track when an ignored song starts playing.
 - [ ] **Ignore stats** — Show a counter of how many songs you have ignored in the current session and all-time.
 - [ ] **Unignore** — If you ignored a song by mistake, add a way to reverse it without leaving the web player.
-
 - [ ] **Option to blacklist artists** — Add an option to ignore all songs from a specific artist, not just individual tracks, with a local blacklist stored in `localStorage`.
+- [ ] **Detection of invalid user ID** — If the stored user ID becomes invalid (e.g. due to a Spotify account change), detect this and prompt the user to update it.
 
 ---
 
