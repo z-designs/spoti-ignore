@@ -88,12 +88,13 @@ Your credentials never leave Spotify's own infrastructure.
 - [ ] **Ignore stats** — Show a counter of how many songs you have ignored in the current session and all-time.
 - [ ] **Unignore** — If you ignored a song by mistake, add a way to reverse it without leaving the web player.
 - [ ] **Easy user ID setup** — Instead of asking for the Spotify User ID on first use, try to capture it automatically from the page or Spotify's own API responses or by navigating the user to the spotify profile page and scraping it from the URL.
+- [ ] **Option to blacklist artists** — Add an option to ignore all songs from a specific artist, not just individual tracks, with a local blacklist stored in `localStorage`.
 
 ---
 
 ## Disclaimer
 
-This project was built with assistance from AI (GitHub Copilot / Claude). The code has been reviewed and tested by the author, but use it at your own discretion. Spoti-Ignore is an independent hobby project and is not affiliated with, endorsed by, or connected to Spotify AB in any way.
+This project was built with assistance from AI (GitHub Copilot / Claude). The code has been reviewed and tested by the author, but use it at your own discretion. Spoti-Ignore is an independent hobby project and is not affiliated with, endorsed, or connected to Spotify AB in any way.
 
 ---
 
