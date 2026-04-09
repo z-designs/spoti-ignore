@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 290px;
+      background: #121212;
+      color: #fff;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 13px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid #282828;
+    }
+    .header img { width: 22px; height: 22px; }
+    .header h1 { font-size: 15px; font-weight: 700; color: #1db954; }
+    .section {
+      padding: 14px 16px;
+      border-bottom: 1px solid #282828;
+    }
+    .section-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #888;
+      margin-bottom: 10px;
+    }
+    #userid-display {
+      background: #1a1a1a;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: #b3b3b3;
+      font-family: monospace;
+      word-break: break-all;
+      margin-bottom: 10px;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+    }
+    #userid-display.not-set {
+      color: #666;
+      font-family: inherit;
+      font-style: italic;
+    }
+    .btn-row { display: flex; gap: 8px; }
+    button {
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 14px;
+      transition: opacity 0.15s;
+    }
+    button:hover { opacity: 0.82; }
+    button:active { opacity: 0.65; }
+    button:disabled { opacity: 0.45; cursor: default; }
+    .btn-primary { background: #1db954; color: #000; flex: 1; }
+    .btn-danger  { background: #2a1010; color: #e5373a; border: 1px solid #5a1f1f; flex: 1; }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .toggle-label { color: #ccc; }
+    .toggle-sub { font-size: 11px; color: #555; margin-top: 3px; }
+    .switch { position: relative; display: inline-block; width: 38px; height: 20px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0;
+      background: #333; border-radius: 20px;
+      transition: 0.2s; cursor: pointer;
+    }
+    .slider:before {
+      content: '';
+      position: absolute;
+      width: 14px; height: 14px;
+      left: 3px; top: 3px;
+      background: #fff; border-radius: 50%;
+      transition: 0.2s;
+    }
+    input:checked + .slider { background: #1db954; }
+    input:checked + .slider:before { transform: translateX(18px); }
+    .footer {
+      padding: 10px 16px;
+      font-size: 11px;
+      color: #555;
+      text-align: center;
+    }
+    kbd {
+      background: #282828;
+      border-radius: 4px;
+      padding: 1px 5px;
+      color: #888;
+    }
+    #not-spotify {
+      padding: 24px 20px;
+      text-align: center;
+      color: #888;
+      line-height: 1.6;
+      display: none;
+    }
+    #not-spotify a { color: #1db954; text-decoration: none; }
+    #main-ui { display: none; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="icons/icon32.png" alt="">
+    <h1>Spoti-Ignore</h1>
+  </div>
+
+  <div id="not-spotify">
+    Open <a href="https://open.spotify.com" target="_blank">open.spotify.com</a><br>to use Spoti-Ignore.
+  </div>
+
+  <div id="main-ui">
+    <div class="section">
+      <div class="section-label">Spotify user ID</div>
+      <div id="userid-display" class="not-set">No user ID set</div>
+      <div class="btn-row">
+        <button class="btn-primary" id="btn-change">Change user ID</button>
+        <button class="btn-danger" id="btn-clear">Clear</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Debug logging</div>
+          <div class="toggle-sub">Outputs to DevTools console</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="debug-toggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="footer">Keyboard shortcut: <kbd>Shift + X</kbd></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
