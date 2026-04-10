@@ -104,8 +104,11 @@ Then reload the extension in `chrome://extensions` and refresh the Spotify tab. 
 - [ ] **Ignore stats** — Show a counter of how many songs you have ignored in the current session and all-time.
 - [ ] **Unignore** — If you ignored a song by mistake, add a way to reverse it without leaving the web player.
 - [ ] **Option to blacklist artists** — Add an option to ignore all songs from a specific artist, not just individual tracks, with a local blacklist stored in `localStorage`.
-- [ ] **Detection of invalid user ID** — If the stored user ID becomes invalid (e.g. due to a Spotify account change), detect this and prompt the user to update it.
+- [x] **Detection of invalid user ID** — If the stored user ID becomes invalid (e.g. due to a Spotify account change), detect this and prompt the user to update it.
 - [ ] **Support for other browsers** — Test and ensure compatibility with Firefox and Safari, which may require some adjustments to the extension APIs used.
+- [ ] **Option for blacklisting genres**
+- [ ] **Shorcut for starting radio on track**
+- [ ] **Option for removing song from playlist like on mobile and app**
 
 ---
 
