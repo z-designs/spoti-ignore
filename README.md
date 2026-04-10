@@ -109,6 +109,7 @@ Then reload the extension in `chrome://extensions` and refresh the Spotify tab. 
 - [ ] **Option for blacklisting genres**
 - [ ] **Shorcut for starting radio on track**
 - [ ] **Option for removing song from playlist like on mobile and app**
+- [ ] **Option for seeing music genre directly in spotify**
 
 ---
 
