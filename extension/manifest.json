@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Spoti-Ignore",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "One-click button to tell Spotify to stop recommending a song. Uses Spotify's own ignore API.",
   "icons": {
     "16":  "icons/icon16.png",

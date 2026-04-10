@@ -54,7 +54,13 @@ function autoFillModalUserId(userId) {
     dbg("User ID auto-captured from profile API:", userId);
 
     const modal = document.getElementById("spoti-ignore-modal-overlay");
-    if (!modal) return;
+    if (!modal) {
+        // No modal open — user ID was detected in the background while already on Spotify.
+        // Check whether the current track is already ignored and refresh button state.
+        refreshIgnoredState();
+        updateStatusPanel();
+        return;
+    }
 
     // Update the waiting badge to show success
     const badge = document.getElementById("spoti-ignore-detect-badge");
@@ -62,16 +68,18 @@ function autoFillModalUserId(userId) {
         badge.style.background = "rgba(29,185,84,0.15)";
         badge.style.color = "#1db954";
         badge.style.borderColor = "#1db954";
-        badge.textContent = `\u2713 Detected: ${userId}`;
+        badge.textContent = `Detected: ${userId}`;
     }
 
-    // Brief delay so the user can see the success state, then auto-close
+    // Brief delay so the user can see the success state, then reload so tokens
+    // and state are re-acquired cleanly with the correct user ID.
     setTimeout(() => {
         modal.remove();
         if (_modalResolve) {
             _modalResolve(userId);
             _modalResolve = null;
         }
+        window.location.reload();
     }, 900);
 }
 
@@ -127,28 +135,24 @@ function showUserIdModal(opts = {}) {
                 "<strong style='color:#fff'>Automatic detection:</strong><br>"
                 + "1. Click your <strong style='color:#fff'>profile icon</strong> in the top-right corner of Spotify.<br>"
                 + "2. Click <strong style='color:#fff'>Profile</strong>.<br>"
-                + "3. We'll detect your ID automatically \u2014 no copy-paste needed.";
+                + "3. We'll detect your ID automatically.";
 
-            const badge = document.createElement("div");
-            badge.id = "spoti-ignore-detect-badge";
-            Object.assign(badge.style, {
-                display: "inline-flex", alignItems: "center", gap: "6px",
-                fontSize: "12px", color: "#888",
-                border: "1px solid #333", borderRadius: "20px",
-                padding: "5px 12px", alignSelf: "flex-start",
-                transition: "all 0.3s"
+            // "Close and go to profile" button — dismisses modal so user can navigate
+            const goBtn = document.createElement("button");
+            goBtn.textContent = "Close - I'll go to my profile now";
+            Object.assign(goBtn.style, {
+                padding: "9px 14px", background: "#ffffff", color: "#000",
+                border: "none", borderRadius: "20px", cursor: "pointer",
+                fontSize: "13px", fontWeight: "700", alignSelf: "flex-start"
             });
-            badge.innerHTML = '<span style="animation:spin 1s linear infinite;display:inline-block">&#8635;</span> Waiting for profile visit...';
-
-            if (!document.getElementById("spoti-ignore-spin-style")) {
-                const style = document.createElement("style");
-                style.id = "spoti-ignore-spin-style";
-                style.textContent = "@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }";
-                document.head.appendChild(style);
-            }
+            goBtn.onclick = () => {
+                overlay.remove();
+                _modalResolve = null;
+                resolve(null);
+            };
 
             detectSection.appendChild(steps);
-            detectSection.appendChild(badge);
+            detectSection.appendChild(goBtn);
         }
 
         const divider = document.createElement("div");
@@ -184,7 +188,7 @@ function showUserIdModal(opts = {}) {
         if (urlId) {
             input.value = urlId;
             errorMsg.style.color = "#1db954";
-            errorMsg.textContent = `\u2713 Detected from URL: ${urlId}`;
+            errorMsg.textContent = `Detected from URL: ${urlId}`;
         }
 
         inputWrap.appendChild(inputLabel);
@@ -203,7 +207,7 @@ function showUserIdModal(opts = {}) {
             const val = input.value.trim();
             if (!isValidUserId(val)) {
                 errorMsg.style.color = "#e5373a";
-                errorMsg.textContent = "Invalid ID \u2014 use only letters, numbers, underscores (min 2 chars).";
+                errorMsg.textContent = "Invalid user ID — use only letters, numbers, underscores (min 2 chars).";
                 return;
             }
             setStoredSpotifyUserId(val);
@@ -222,25 +226,22 @@ function showUserIdModal(opts = {}) {
         card.appendChild(inputWrap);
         card.appendChild(confirmBtn);
 
-        // Dismiss button — different label for reset vs onboarding but same behaviour
-        const dismissBtn = document.createElement("button");
-        dismissBtn.textContent = isReset ? "Cancel" : "Skip for now";
-        Object.assign(dismissBtn.style, {
-            padding: isReset ? "10px" : "6px",
-            background: "transparent",
-            color: isReset ? "#b3b3b3" : "#666",
-            border: isReset ? "1px solid #333" : "none",
-            borderRadius: "24px",
-            cursor: "pointer",
-            fontSize: isReset ? "14px" : "12px",
-            textDecoration: isReset ? "none" : "underline"
-        });
-        dismissBtn.onclick = () => {
-            overlay.remove();
-            _modalResolve = null;
-            resolve(null);
-        };
-        card.appendChild(dismissBtn);
+        // Cancel / dismiss — only shown in reset mode (onboarding already has the green close button)
+        if (isReset) {
+            const cancelBtn = document.createElement("button");
+            cancelBtn.textContent = "Cancel";
+            Object.assign(cancelBtn.style, {
+                padding: "10px", background: "transparent", color: "#b3b3b3",
+                border: "1px solid #333", borderRadius: "24px", cursor: "pointer",
+                fontSize: "14px"
+            });
+            cancelBtn.onclick = () => {
+                overlay.remove();
+                _modalResolve = null;
+                resolve(null);
+            };
+            card.appendChild(cancelBtn);
+        }
 
         overlay.appendChild(card);
         document.body.appendChild(overlay);
@@ -456,15 +457,31 @@ async function isTrackIgnored(uri, userId) {
             const data = await res.json();
             return data?.found?.[0] === true;
         }
+        // Non-ok means tokens or user ID are likely wrong — surface the reload prompt
+        dbgw("Failed /contains check, status:", res.status);
+        return null; // signals an error, distinct from false (not ignored)
     } catch (e) { dbgw("Failed to check ignored state", e); }
-    return false;
+    return null;
 }
 
 async function refreshIgnoredState() {
     const uri    = window.currentTrackUri;
     const userId = getStoredSpotifyUserId();
     if (!uri || !userId || !window.spotifyDislikeTokens?.bearer || !window.spotifyDislikeTokens?.client) return;
-    window.currentTrackIgnored = await isTrackIgnored(uri, userId);
+    const result = await isTrackIgnored(uri, userId);
+    if (result === null) {
+        // API call failed — show the reload prompt on the button right away
+        window._spotiIgnoreAwaitingReload = true;
+        const btn = document.getElementById("spotify-ignore-btn");
+        if (btn) {
+            btn.innerText = "Reload?";
+            btn.style.background = "#7c3aed";
+            btn.style.cursor = "pointer";
+            btn.title = "Something went wrong. Click to reload. If it keeps failing the User ID will be reset.";
+        }
+        return;
+    }
+    window.currentTrackIgnored = result;
     dbg("Track ignored state:", window.currentTrackIgnored);
     updateStatusPanel();
 }
@@ -507,7 +524,8 @@ function updateStatusPanel() {
 
     const { bearer, client } = window.spotifyDislikeTokens || {};
     const track      = window.currentTrackUri;
-    const allReady   = !!(bearer && client && track);
+    const userId     = getStoredSpotifyUserId();
+    const allReady   = !!(bearer && client && track && userId);
     const tokensReady = !!(bearer && client);
 
     panel.style.display = allReady ? "none" : "block";
@@ -515,15 +533,15 @@ function updateStatusPanel() {
     if (!allReady) {
         const row = (label, ok) =>
             `<div style="display:flex;align-items:center;gap:6px;margin:2px 0">
-                <span style="font-size:12px;color:${ok ? '#1db954' : '#f59e0b'}">${ok ? '\u2713' : '\u23f3'}</span>
+                <span style="font-size:12px;color:${ok ? '#1db954' : '#f59e0b'}"></span>
                 <span style="font-size:11px;opacity:0.85">${label}: ${ok ? 'ready' : 'waiting...'}</span>
             </div>`;
-        panel.innerHTML = row("Bearer", !!bearer) + row("Client token", !!client) + row("Track", !!track);
+        panel.innerHTML = row("Bearer", !!bearer) + row("Client token", !!client) + row("Track", !!track) + row("User ID", !!userId);
     }
 
     const btn = document.getElementById("spotify-ignore-btn");
     if (!btn) return;
-    const stable = btn.innerText === "Ignore" || btn.innerText === "\u23f3 Detecting..." || btn.innerText === "Already ignored";
+    const stable = btn.innerText === "Ignore" || btn.innerText === "Detecting..." || btn.innerText === "Already ignored";
     if (!stable) return;
 
     if (allReady) {
@@ -538,12 +556,12 @@ function updateStatusPanel() {
         }
         btn.title = "";
     } else if (tokensReady) {
-        btn.innerText = "\u23f3 Detecting...";
+        btn.innerText = "Detecting...";
         btn.style.background = "#b45309";
         btn.style.cursor = "default";
         btn.title = "Waiting for track detection";
     } else {
-        btn.innerText = "\u23f3 Detecting...";
+        btn.innerText = "Detecting...";
         btn.style.background = "#7c3aed";
         btn.style.cursor = "default";
         btn.title = "Waiting for: " + [!bearer && "Bearer", !client && "Client token", !track && "Track"].filter(Boolean).join(", ");
@@ -585,16 +603,33 @@ function injectButton() {
 
     btn.onclick = async () => {
         if (window.currentTrackIgnored) return;
+
+        // Second click after a failure — clear bad user ID and reload
+        if (window._spotiIgnoreAwaitingReload) {
+            localStorage.setItem("spoti-ignore-failed-reload", "1");
+            window.location.reload();
+            return;
+        }
+
         btn.innerText = "Working...";
         btn.style.cursor = "default";
         const ok = await ignoreCurrentTrack();
-        btn.innerText = ok ? "Ignored \u2713" : "Failed";
-        setTimeout(() => { btn.innerText = "Ignore"; updateStatusPanel(); }, 2000);
+        if (ok) {
+            btn.innerText = "Ignored";
+            setTimeout(() => { btn.innerText = "Ignore"; updateStatusPanel(); }, 2000);
+        } else {
+            // Show reload prompt — stays until clicked or page is refreshed
+            window._spotiIgnoreAwaitingReload = true;
+            btn.innerText = "Reload?";
+            btn.style.background = "#7c3aed";
+            btn.style.cursor = "pointer";
+            btn.title = "Something went wrong. Click to reload. If it keeps failing the User ID will be reset.";
+        }
     };
 
     const changeUser = document.createElement("button");
     changeUser.id = "spoti-ignore-change-user";
-    changeUser.textContent = "\u2699 Change account";
+    changeUser.textContent = "Change user ID";
     changeUser.title = "Change your Spotify User ID";
     Object.assign(changeUser.style, {
         background: "transparent", border: "none",
@@ -616,11 +651,7 @@ function injectButton() {
     wrapper.appendChild(status);
     wrapper.appendChild(btn);
     document.body.appendChild(wrapper);
-    updateStatusPanel();
 }
-
-// ============================================================
-//  KEYBOARD SHORTCUT  (Shift + X)
 // ============================================================
 
 document.addEventListener("keydown", async (e) => {
@@ -630,8 +661,16 @@ document.addEventListener("keydown", async (e) => {
         if (btn) { btn.innerText = "Working..."; btn.style.cursor = "default"; }
         const ok = await ignoreCurrentTrack();
         if (btn) {
-            btn.innerText = ok ? "Ignored \u2713" : "Failed";
-            setTimeout(() => { btn.innerText = "Ignore"; updateStatusPanel(); }, 2000);
+            if (ok) {
+                btn.innerText = "Ignored (via Shift+X)";
+                setTimeout(() => { btn.innerText = "Ignore"; updateStatusPanel(); }, 2000);
+            } else {
+                window._spotiIgnoreAwaitingReload = true;
+                btn.innerText = "Reload?";
+                btn.style.background = "#7c3aed";
+                btn.style.cursor = "pointer";
+                btn.title = "Something went wrong. Click to reload. If it keeps failing the User ID will be reset.";
+            }
         }
     }
 });
@@ -639,6 +678,14 @@ document.addEventListener("keydown", async (e) => {
 // ============================================================
 //  INIT
 // ============================================================
+
+// If we reloaded after a failed ignore, the stored user ID is likely wrong — clear it
+// so the setup modal appears, letting the user re-enter the correct ID.
+if (localStorage.getItem("spoti-ignore-failed-reload") === "1") {
+    localStorage.removeItem("spoti-ignore-failed-reload");
+    clearStoredSpotifyUserId();
+    dbg("User ID cleared after failed-reload cycle — re-running setup");
+}
 
 // Show onboarding modal if no stored user ID, but wait for DOM to settle first.
 setTimeout(async () => {

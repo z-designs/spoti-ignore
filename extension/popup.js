@@ -58,13 +58,12 @@ async function init() {
         window.close();
     };
 
-    // Clear account — removes the stored ID without opening any modal
+    // Clear account — removes the stored ID and reloads the Spotify tab
     document.getElementById("btn-clear").onclick = async () => {
         await execOnPage(() => localStorage.removeItem("spoti-ignore-userid"));
-        renderUserId(null);
-        const btn = document.getElementById("btn-clear");
-        btn.textContent = "Cleared";
-        btn.disabled = true;
+        // Reload the Spotify tab so the setup modal appears fresh
+        await execOnPage(() => window.location.reload());
+        window.close();
     };
 
     // Debug toggle
